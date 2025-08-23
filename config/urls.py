@@ -15,7 +15,8 @@ api_urlpatterns = [
 # Main URL patterns
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v1/', include(api_urlpatterns)),
+    path('api/', include(api_urlpatterns)),
+    path('api/', include('apps.authentication.urls')),
 ]
 
 # # Include debug toolbar URLs in development
