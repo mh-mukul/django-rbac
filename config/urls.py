@@ -7,16 +7,12 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 
-# API URL patterns
-api_urlpatterns = [
-    path('users/', include('apps.users.urls')),
-]
-
 # Main URL patterns
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include(api_urlpatterns)),
     path('api/', include('apps.authentication.urls')),
+    path('api/', include('apps.organization.urls')),
+    path('api/', include('apps.users.urls')),
 ]
 
 # # Include debug toolbar URLs in development
