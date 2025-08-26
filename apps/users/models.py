@@ -2,6 +2,8 @@ from uuid import uuid4
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin
 
+from apps.organization.models import Organization
+
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, mobile, password, **extra_fields):
@@ -36,6 +38,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
     is_password_reset_required = models.BooleanField(default=False)
+    Organization = models.ForeignKey(
+        Organization, on_delete=models.SET_NULL, null=True, blank=True)
 
     USERNAME_FIELD = 'mobile'
     REQUIRED_FIELDS = []
@@ -56,3 +60,14 @@ class User(AbstractBaseUser, PermissionsMixin):
                 new_fake_phone = str(uuid4())
             self.mobile = new_fake_phone
         super(User, self).save(*args, **kwargs)
+
+    @classmethod
+    def get_active(cls):
+        return cls.objects.filter(is_active=True, is_deleted=False)
+
+    @classmethod
+    def get_by_id(cls, user_id):
+        try:
+            return cls.objects.get(id=user_id, is_deleted=False)
+        except cls.DoesNotExist:
+            return None

@@ -5,6 +5,9 @@ Django base settings for django-rbac project.
 import os
 from pathlib import Path
 from datetime import timedelta
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -147,8 +150,8 @@ REST_FRAMEWORK = {
 AUTH_USER_MODEL = 'users.User'
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": os.environ.get("ACCESS_TOKEN_LIFETIME", timedelta(minutes=5)),
-    "REFRESH_TOKEN_LIFETIME": os.environ.get("REFRESH_TOKEN_LIFETIME", timedelta(days=1)),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(os.environ.get('ACCESS_TOKEN_LIFETIME'))),
+    "REFRESH_TOKEN_LIFETIME": timedelta(minutes=int(os.environ.get('REFRESH_TOKEN_LIFETIME'))),
     "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": False,
     "UPDATE_LAST_LOGIN": False,

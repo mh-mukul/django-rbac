@@ -7,3 +7,6 @@ class Organization(AbstractBaseFields):
 
     class Meta:
         db_table = "organizations"
+
+    def __str__(self):
+        return self.name

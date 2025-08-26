@@ -48,3 +48,14 @@ class AbstractBaseFields(models.Model):
     def soft_active(self):
         self.is_active = True
         self.save()
+
+    @classmethod
+    def get_active(cls):
+        return cls.objects.filter(is_active=True, is_deleted=False)
+
+    @classmethod
+    def get_by_id(cls, org_id):
+        try:
+            return cls.objects.get(id=org_id, is_deleted=False)
+        except cls.DoesNotExist:
+            return None

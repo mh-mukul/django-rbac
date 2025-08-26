@@ -3,6 +3,9 @@ Django development settings for django-rbac project.
 """
 import os
 from .base import *
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
