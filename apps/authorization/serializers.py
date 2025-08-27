@@ -8,6 +8,21 @@ class ModuleSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "created_at"]
         read_only_fields = ["id", "created_at"]
 
+    def create(self, validated_data):
+        if Module.objects.filter(name=validated_data['name'], is_deleted=False).exists():
+            raise serializers.ValidationError(
+                {"name": ["Module with this name already exists."]})
+        return Module.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        if 'name' in validated_data and Module.objects.filter(name=validated_data['name'], is_deleted=False).exclude(id=instance.id).exists():
+            raise serializers.ValidationError(
+                {"name": ["Module with this name already exists."]})
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
 
 class PermissionSerializer(serializers.ModelSerializer):
     module = ModuleSerializer(read_only=True)
@@ -27,14 +42,18 @@ class PermissionCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class RoleSerializer(serializers.ModelSerializer):
-    permissions = PermissionSerializer(
-        source='get_permissions', many=True, read_only=True)
+    permissions = serializers.SerializerMethodField()
 
     class Meta:
         model = Role
         fields = ["id", "name", "description", "organization",
                   "editable", "permissions", "created_at"]
         read_only_fields = ["id", "created_at"]
+
+    def get_permissions(self, obj):
+        permissions = obj.role_permissions.select_related('permission').filter(
+            is_active=True, is_deleted=False)
+        return PermissionSerializer([rp.permission for rp in permissions], many=True).data
 
 
 class RoleCreateUpdateSerializer(serializers.ModelSerializer):
@@ -47,7 +66,15 @@ class RoleCreateUpdateSerializer(serializers.ModelSerializer):
         read_only_fields = ["id",]
 
     def create(self, validated_data):
+        if Role.objects.filter(name=validated_data['name'], organization=validated_data.get('organization'), is_deleted=False).exists():
+            raise serializers.ValidationError(
+                {"name": ["Role with this name already exists in this organization."]})
         permission_ids = validated_data.pop('permission_ids', [])
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            validated_data['organization'] = request.user.organization
+            validated_data['created_by'] = request.user
+            validated_data['updated_by'] = request.user
         role = Role.objects.create(**validated_data)
         for perm_id in permission_ids:
             try:
@@ -58,17 +85,23 @@ class RoleCreateUpdateSerializer(serializers.ModelSerializer):
         return role
 
     def update(self, instance, validated_data):
+        if 'name' in validated_data and Role.objects.filter(name=validated_data['name'], organization=instance.organization, is_deleted=False).exclude(id=instance.id).exists():
+            raise serializers.ValidationError(
+                {"name": ["Role with this name already exists in this organization."]})
         permission_ids = validated_data.pop('permission_ids', None)
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            validated_data['updated_by'] = request.user
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
-        if permission_ids is not None:
-            instance.role_permissions.all().delete()
-            for perm_id in permission_ids:
-                try:
-                    permission = Permission.objects.get(id=perm_id)
-                    RolePermission.objects.create(
-                        role=instance, permission=permission)
-                except Permission.DoesNotExist:
-                    continue
+        instance.role_permissions.update(is_active=False, is_deleted=True)
+        for perm_id in (permission_ids or []):
+            try:
+                permission = Permission.objects.get(id=perm_id)
+                RolePermission.objects.create(
+                    role=instance, permission=permission)
+            except Permission.DoesNotExist:
+                continue
+
         return instance

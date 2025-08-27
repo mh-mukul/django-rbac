@@ -2,15 +2,15 @@ from rest_framework import status
 from rest_framework.views import APIView
 from django.core.paginator import Paginator
 from rest_framework.permissions import IsAuthenticated
-from apps.core.permissions import IsAdminUser
+from apps.core.permissions import IsAdminUser, IsSuperUser
 
 from apps.core.helpers import ResponseHelper
-from apps.authorization.models import Role
-from apps.authorization.serializers import RoleSerializer
+from apps.authorization.models import Role, RolePermission
+from apps.authorization.serializers import RoleSerializer, RoleCreateUpdateSerializer
 
 
 class RoleListCreateView(APIView, ResponseHelper):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated, IsAdminUser | IsSuperUser]
 
     def get(self, request):
         roles = Role.get_all().order_by('id')
@@ -31,7 +31,8 @@ class RoleListCreateView(APIView, ResponseHelper):
         )
 
     def post(self, request):
-        serializer = RoleSerializer(data=request.data)
+        serializer = RoleCreateUpdateSerializer(
+            data=request.data, context={'request': request})
         if not serializer.is_valid():
             return self.error_response(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -47,7 +48,7 @@ class RoleListCreateView(APIView, ResponseHelper):
 
 
 class RoleDetailsView(APIView, ResponseHelper):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated, IsAdminUser | IsSuperUser]
 
     def get(self, request, pk):
         if request.user.is_superuser:
@@ -80,7 +81,8 @@ class RoleDetailsView(APIView, ResponseHelper):
                 message="Role not found",
                 errors={"id": ["Role with this ID does not exist."]}
             )
-        serializer = RoleSerializer(role, data=request.data, partial=True)
+        serializer = RoleCreateUpdateSerializer(
+            role, data=request.data, partial=True, context={'request': request})
         if not serializer.is_valid():
             return self.error_response(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -107,6 +109,8 @@ class RoleDetailsView(APIView, ResponseHelper):
                 errors={"id": ["Role with this ID does not exist."]}
             )
         role.soft_delete()
+        RolePermission.objects.filter(role=role, is_deleted=False).update(
+            is_active=False, is_deleted=True)
         return self.success_response(
             status_code=status.HTTP_200_OK,
             message="Role deleted successfully"

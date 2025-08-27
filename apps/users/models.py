@@ -38,7 +38,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
     is_password_reset_required = models.BooleanField(default=False)
-    Organization = models.ForeignKey(
+    organization = models.ForeignKey(
         Organization, on_delete=models.SET_NULL, null=True, blank=True)
     role = models.ForeignKey(
         Role, on_delete=models.SET_NULL, null=True, blank=True)
