@@ -65,8 +65,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         return cls.objects.filter(is_active=True, is_deleted=False)
 
     @classmethod
-    def get_by_id(cls, user_id):
+    def get_by_id(cls, pk):
         try:
-            return cls.objects.get(id=user_id, is_deleted=False)
+            return cls.objects.get(id=pk, is_deleted=False)
         except cls.DoesNotExist:
             return None

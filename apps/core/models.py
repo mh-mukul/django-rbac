@@ -10,7 +10,7 @@ class AbstractModelManager(models.Manager):
 
 class AbstractBaseFields(models.Model):
     is_active = models.BooleanField(
-        ('Is Active'), default=False
+        ('Is Active'), default=True
     )
     is_deleted = models.BooleanField(
         ('Is Deleted'), default=False
@@ -54,8 +54,12 @@ class AbstractBaseFields(models.Model):
         return cls.objects.filter(is_active=True, is_deleted=False)
 
     @classmethod
-    def get_by_id(cls, org_id):
+    def get_all(cls):
+        return cls.objects.filter(is_deleted=False)
+
+    @classmethod
+    def get_by_id(cls, pk):
         try:
-            return cls.objects.get(id=org_id, is_deleted=False)
+            return cls.objects.get(id=pk, is_deleted=False)
         except cls.DoesNotExist:
             return None

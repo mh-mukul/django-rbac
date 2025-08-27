@@ -9,7 +9,7 @@ from apps.organization.models import Organization
 from apps.organization.serializers import OrganizationSerializer, OrganizationCreateUpdateSerializer
 
 
-class OrganizationListView(APIView, ResponseHelper):
+class OrganizationListCreateView(APIView, ResponseHelper):
     permission_classes = [IsAuthenticated, IsSuperUser]
 
     def get(self, request):
@@ -27,10 +27,6 @@ class OrganizationListView(APIView, ResponseHelper):
             total_pages=paginator.num_pages,
             total_items=paginator.count
         )
-
-
-class OrganizationCreateView(APIView, ResponseHelper):
-    permission_classes = [IsAuthenticated, IsSuperUser]
 
     def post(self, request):
         serializer = OrganizationCreateUpdateSerializer(
