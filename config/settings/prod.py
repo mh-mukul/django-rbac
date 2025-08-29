@@ -38,30 +38,3 @@ DEFAULT_FROM_EMAIL = os.environ.get(
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get(
     'DATA_UPLOAD_MAX_MEMORY_SIZE', 10 * 1024 * 1024))  # 10 MB
-
-# Logging configuration
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
-        },
-    },
-    'handlers': {
-        'file': {
-            'level': 'ERROR',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs/django.log'),
-            'formatter': 'verbose',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['file'],
-            'level': 'ERROR',
-            'propagate': True,
-        },
-    },
-}

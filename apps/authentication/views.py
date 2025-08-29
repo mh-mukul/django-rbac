@@ -1,3 +1,4 @@
+import logging
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -8,6 +9,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from apps.users.models import User
 from apps.core.helpers import ResponseHelper
 from apps.authentication.serializers import LogoutSerializer
+
+logger = logging.getLogger('authentication')
 
 
 class UserLoginView(TokenObtainPairView, ResponseHelper):
@@ -44,9 +47,9 @@ class UserLoginView(TokenObtainPairView, ResponseHelper):
                     "is_superuser": user_instance.is_superuser,
                     "is_staff": user_instance.is_staff,
                     "organization": {
-                        "id": user_instance.Organization.id,
-                        "name": user_instance.Organization.name
-                    } if user_instance.Organization else None
+                        "id": user_instance.organization.id,
+                        "name": user_instance.organization.name
+                    } if user_instance.organization else None
                 },
             }
             return self.success_response(
@@ -56,6 +59,8 @@ class UserLoginView(TokenObtainPairView, ResponseHelper):
             )
 
         except Exception as e:
+            logger.error("Error during user login", exc_info=True,
+                         extra={"mobile": request.data.get("mobile"), "error": str(e)})
             return self.error_response(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 message="Something went wrong",
@@ -83,12 +88,16 @@ class UserLogoutView(APIView, ResponseHelper):
                     data=None
                 )
             except TokenError as e:
+                logger.error("Token error during logout", exc_info=True,
+                             extra={"user_id": request.user.id, "error": str(e)})
                 return self.error_response(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     message="Token Error",
                     errors=[str(e)]
                 )
             except Exception as e:
+                logger.error("Error during user logout", exc_info=True,
+                             extra={"user_id": request.user.id, "error": str(e)})
                 return self.error_response(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     message="Something went wrong",
@@ -137,9 +146,9 @@ class RefreshTokenView(APIView, ResponseHelper):
                     "is_superuser": user_instance.is_superuser,
                     "is_staff": user_instance.is_staff,
                     "organization": {
-                        "id": user_instance.Organization.id,
-                        "name": user_instance.Organization.name
-                    } if user_instance.Organization else None
+                        "id": user_instance.organization.id,
+                        "name": user_instance.organization.name
+                    } if user_instance.organization else None
                 },
             }
             return self.success_response(
@@ -148,6 +157,8 @@ class RefreshTokenView(APIView, ResponseHelper):
                 data=custom_response_data
             )
         except Exception as e:
+            logger.error("Error during token refresh", exc_info=True,
+                         extra={"error": str(e)})
             return self.error_response(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 message="Something went wrong",

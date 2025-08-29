@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
+from config.logger import LOGGING
 
 load_dotenv()
 
@@ -166,3 +167,6 @@ SIMPLE_JWT = {
     "JWK_URL": None,
     "LEEWAY": 0,
 }
+
+# Logging Configuration
+LOGGING = LOGGING
