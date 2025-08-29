@@ -38,7 +38,7 @@ INSTALLED_APPS = [
 
     # Local apps
     'apps.core',
-    'apps.users',
+    'apps.user',
     'apps.authentication',
     'apps.organization',
     'apps.authorization',
@@ -149,7 +149,7 @@ REST_FRAMEWORK = {
 }
 
 # Custom user model
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = 'user.User'
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(os.environ.get('ACCESS_TOKEN_LIFETIME'))),

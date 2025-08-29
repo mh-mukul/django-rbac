@@ -13,7 +13,7 @@ class OrganizationListCreateView(APIView, ResponseHelper):
     permission_classes = [IsAuthenticated, IsSuperUser]
 
     def get(self, request):
-        organizations = Organization.get_active().order_by('id')
+        organizations = Organization.get_all().order_by('id')
         page = request.GET.get('page', 1)
         limit = request.GET.get('limit', 10)
         paginator = Paginator(organizations, limit)

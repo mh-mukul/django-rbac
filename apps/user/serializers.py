@@ -5,6 +5,9 @@ Serializers for the users app.
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
+from apps.authorization.serializers import RoleSerializer
+from apps.organization.serializers import OrganizationSerializer
+
 User = get_user_model()
 
 
@@ -12,13 +15,14 @@ class UserSerializer(serializers.ModelSerializer):
     """
     Serializer for the User model.
     """
-    full_name = serializers.CharField(read_only=True)
+    role = RoleSerializer(read_only=True)
+    organization = OrganizationSerializer(read_only=True)
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'first_name', 'last_name', 'full_name',
-                  'is_active', 'date_joined', 'last_login']
-        read_only_fields = ['id', 'date_joined', 'last_login']
+        fields = ['id', 'name', 'mobile', 'email', 'is_admin',
+                  'is_active', 'organization', 'role', 'last_login']
+        read_only_fields = ['id', 'last_login']
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -32,8 +36,8 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email', 'first_name', 'last_name',
-                  'password', 'password_confirm', 'is_active']
+        fields = ['name', 'mobile', 'email', 'password', 'password_confirm',
+                  'is_admin', 'is_active', 'role']
 
     def validate(self, data):
         """
@@ -48,6 +52,9 @@ class UserCreateSerializer(serializers.ModelSerializer):
         """
         Create and return a new user with encrypted password.
         """
+        request = self.context.get("request")
+        user = request.user if request else None
+        validated_data['organization'] = user.organization if user else None
         password = validated_data.pop('password')
         user = User(**validated_data)
         user.set_password(password)
@@ -61,7 +68,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'is_active']
+        fields = ['name', 'email', 'is_admin', 'is_active', 'role']
 
 
 class ChangePasswordSerializer(serializers.Serializer):

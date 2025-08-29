@@ -23,7 +23,6 @@ class OrganizationCreateUpdateSerializer(serializers.ModelSerializer):
         user = request.user if request else None
         validated_data['created_by'] = user
         validated_data['updated_by'] = user
-        validated_data['is_active'] = True
         return Organization.objects.create(**validated_data)
 
     def update(self, instance, validated_data):

@@ -15,7 +15,7 @@ class CustomUserAdmin(UserAdmin):
         (None, {'fields': ('mobile', 'password')}),
         ('Personal info', {'fields': ('name', 'email')}),
         ('Permissions', {'fields': ('is_active',
-         'is_staff', 'is_superuser', 'is_deleted')}),
+         'is_admin', 'is_staff', 'is_superuser', 'is_deleted')}),
     )
 
     add_fieldsets = (

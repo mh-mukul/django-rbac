@@ -6,7 +6,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from apps.users.models import User
+from apps.user.models import User
 from apps.core.helpers import ResponseHelper
 from apps.authentication.serializers import LogoutSerializer
 

@@ -1,8 +1,9 @@
 from django.db import models
+from django.utils import timezone
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin
 
 from apps.organization.models import Organization
-from apps.authorization.models import Role, Permission
+from apps.authorization.models import Role
 
 
 class CustomUserManager(BaseUserManager):
@@ -60,9 +61,20 @@ class User(AbstractBaseUser, PermissionsMixin):
                 'permission__codename', flat=True))
         return set()
 
+
+    def soft_delete(self):
+        self.is_deleted = True
+        self.is_active = False
+        self.deleted_at = timezone.now()
+        self.save()
+
     @classmethod
     def get_active(cls):
         return cls.objects.filter(is_active=True, is_deleted=False)
+
+    @classmethod
+    def get_all(cls):
+        return cls.objects.filter(is_deleted=False)
 
     @classmethod
     def get_by_id(cls, pk):
