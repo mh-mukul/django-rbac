@@ -64,11 +64,36 @@ class RoleCreateUpdateSerializer(serializers.ModelSerializer):
         model = Role
         fields = ["id", "name", "description", "editable", "permission_ids"]
         read_only_fields = ["id",]
-
-    def create(self, validated_data):
-        if Role.objects.filter(name=validated_data['name'], organization=validated_data.get('organization'), is_deleted=False).exists():
+    
+    def validate(self, data):
+        name = data.get('name')
+        request = self.context.get('request')
+        organization = None
+        
+        if request and hasattr(request, 'user'):
+            organization = request.user.organization
+        
+        # For update operation
+        if self.instance:
+            if name and Role.objects.filter(
+                name=name, 
+                organization=self.instance.organization, 
+                is_deleted=False
+            ).exclude(id=self.instance.id).exists():
+                raise serializers.ValidationError(
+                    {"name": ["Role with this name already exists in this organization."]})
+        # For create operation
+        elif name and Role.objects.filter(
+            name=name, 
+            organization=organization, 
+            is_deleted=False
+        ).exists():
             raise serializers.ValidationError(
                 {"name": ["Role with this name already exists in this organization."]})
+        
+        return data
+
+    def create(self, validated_data):
         permission_ids = validated_data.pop('permission_ids', [])
         request = self.context.get('request')
         if request and hasattr(request, 'user'):
@@ -85,9 +110,6 @@ class RoleCreateUpdateSerializer(serializers.ModelSerializer):
         return role
 
     def update(self, instance, validated_data):
-        if 'name' in validated_data and Role.objects.filter(name=validated_data['name'], organization=instance.organization, is_deleted=False).exclude(id=instance.id).exists():
-            raise serializers.ValidationError(
-                {"name": ["Role with this name already exists in this organization."]})
         permission_ids = validated_data.pop('permission_ids', None)
         request = self.context.get('request')
         if request and hasattr(request, 'user'):

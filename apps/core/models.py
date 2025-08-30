@@ -58,8 +58,10 @@ class AbstractBaseFields(models.Model):
         return cls.objects.filter(is_deleted=False)
 
     @classmethod
-    def get_by_id(cls, pk):
+    def get_by_id(cls, pk, organization=None):
         try:
-            return cls.objects.get(id=pk, is_deleted=False)
+            if organization:
+                return cls.objects.get(pk=pk, is_deleted=False, organization=organization)
+            return cls.objects.get(pk=pk, is_deleted=False)
         except cls.DoesNotExist:
             return None

@@ -46,6 +46,15 @@ class UserCreateSerializer(serializers.ModelSerializer):
         if data['password'] != data.pop('password_confirm'):
             raise serializers.ValidationError(
                 {"password_confirm": "Passwords do not match."})
+        # Check if role belongs to the same organization as the user creating it
+        request = self.context.get("request")
+        user = request.user if request else None
+        role = data.get('role')
+        if role and user and not user.is_superuser:
+            if role.organization != user.organization:
+                raise serializers.ValidationError(
+                    {"role": "Invalid role selected."})
+
         return data
 
     def create(self, validated_data):
@@ -69,6 +78,23 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['name', 'email', 'is_admin', 'is_active', 'role']
+
+    def validate(self, attrs):
+        # Check if role belongs to the same organization as the user updating it
+        request = self.context.get("request")
+        user = request.user if request else None
+        role = attrs.get('role')
+        if role and user and not user.is_superuser:
+            if role.organization != user.organization:
+                raise serializers.ValidationError(
+                    {"role": "Invalid role selected."})
+        return attrs
+
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
 
 
 class ChangePasswordSerializer(serializers.Serializer):

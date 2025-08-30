@@ -49,7 +49,12 @@ class UserLoginView(TokenObtainPairView, ResponseHelper):
                     "organization": {
                         "id": user_instance.organization.id,
                         "name": user_instance.organization.name
-                    } if user_instance.organization else None
+                    } if user_instance.organization else None,
+                    "role": {
+                        "id": user_instance.role.id,
+                        "name": user_instance.role.name
+                    } if user_instance.role else None,
+                    "permissions": list(user_instance.get_all_permissions())
                 },
             }
             return self.success_response(
@@ -148,7 +153,12 @@ class RefreshTokenView(APIView, ResponseHelper):
                     "organization": {
                         "id": user_instance.organization.id,
                         "name": user_instance.organization.name
-                    } if user_instance.organization else None
+                    } if user_instance.organization else None,
+                    "role": {
+                        "id": user_instance.role.id,
+                        "name": user_instance.role.name
+                    } if user_instance.role else None,
+                    "permissions": list(user_instance.get_all_permissions())
                 },
             }
             return self.success_response(

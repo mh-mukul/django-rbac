@@ -58,7 +58,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     def get_all_permissions(self):
         if self.role:
             return set(self.role.role_permissions.values_list(
-                'permission__codename', flat=True))
+                'permission__codename', flat=True).order_by('-id'))
         return set()
 
     def soft_delete(self):

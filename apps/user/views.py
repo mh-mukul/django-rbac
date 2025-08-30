@@ -17,10 +17,9 @@ class UserListCreateView(APIView, ResponseHelper):
     }
 
     def get(self, request):
-        qs = User.get_all()
+        users = User.get_all().order_by('-id')
         if not request.user.is_superuser:
-            qs = qs.filter(organization=request.user.organization)
-        users = qs.order_by('-id')
+            users = users.filter(organization=request.user.organization)
         page = request.GET.get('page', 1)
         limit = request.GET.get('limit', 10)
         paginator = Paginator(users, limit)
@@ -61,10 +60,10 @@ class UserDetailView(APIView, ResponseHelper):
     }
 
     def get(self, request, pk):
-        if not request.user.is_superuser:
-            user = User.get_by_id(pk, organization=request.user.organization)
-        else:
+        if request.user.is_superuser:
             user = User.get_by_id(pk)
+        else:
+            user = User.get_by_id(pk, organization=request.user.organization)
         if not user:
             return self.error_response(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -79,7 +78,10 @@ class UserDetailView(APIView, ResponseHelper):
         )
 
     def put(self, request, pk):
-        user = User.get_by_id(pk)
+        if request.user.is_superuser:
+            user = User.get_by_id(pk)
+        else:
+            user = User.get_by_id(pk, organization=request.user.organization)
         if not user:
             return self.error_response(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -102,7 +104,17 @@ class UserDetailView(APIView, ResponseHelper):
         )
 
     def delete(self, request, pk):
-        user = User.get_by_id(pk)
+        if request.user.pk == pk:
+            return self.error_response(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                message="You cannot delete your own account",
+                errors=[{"user_id": "Operation not permitted."}]
+            )
+
+        if request.user.is_superuser:
+            user = User.get_by_id(pk)
+        else:
+            user = User.get_by_id(pk, organization=request.user.organization)
         if not user:
             return self.error_response(
                 status_code=status.HTTP_404_NOT_FOUND,
