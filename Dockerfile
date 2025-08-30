@@ -3,8 +3,6 @@ FROM python:3.10-slim
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
-ENV DJANGO_ENV=prod
-ENV DJANGO_SETTINGS_MODULE=config.settings
 
 # Set the working directory
 WORKDIR /app
@@ -18,23 +16,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
-COPY requirements/ /app/requirements/
-RUN pip install --no-cache-dir -r requirements/prod.txt
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the project
 COPY . /app/
 
-# Make the scripts executable
-RUN chmod +x /app/scripts/*.sh
-
 # Collect static files
 RUN python manage.py collectstatic --no-input
 
-# Run the entrypoint script
-ENTRYPOINT ["/app/scripts/entrypoint.sh"]
-
-# Default command
-CMD ["gunicorn"]
-
 # Expose the port
 EXPOSE 8000
+
+# Start the application
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]
