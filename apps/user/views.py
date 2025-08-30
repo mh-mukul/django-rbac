@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from django.core.paginator import Paginator
 from rest_framework.permissions import IsAuthenticated
-from apps.core.permissions import IsSuperUser
+from apps.core.permissions import HasRolePermission
 
 from apps.core.helpers import ResponseHelper
 from apps.user.models import User
@@ -10,10 +10,17 @@ from apps.user.serializers import UserSerializer, UserCreateSerializer, UserUpda
 
 
 class UserListCreateView(APIView, ResponseHelper):
-    permission_classes = [IsAuthenticated, IsSuperUser]
+    permission_classes = [IsAuthenticated, HasRolePermission]
+    method_permissions = {
+        'GET': ['user.view_user'],
+        'POST': ['user.add_user'],
+    }
 
     def get(self, request):
-        users = User.get_all().order_by('-id')
+        qs = User.get_all()
+        if not request.user.is_superuser:
+            qs = qs.filter(organization=request.user.organization)
+        users = qs.order_by('-id')
         page = request.GET.get('page', 1)
         limit = request.GET.get('limit', 10)
         paginator = Paginator(users, limit)
@@ -46,10 +53,18 @@ class UserListCreateView(APIView, ResponseHelper):
 
 
 class UserDetailView(APIView, ResponseHelper):
-    permission_classes = [IsAuthenticated, IsSuperUser]
+    permission_classes = [IsAuthenticated, HasRolePermission]
+    method_permissions = {
+        'GET': ['user.view_user'],
+        'PUT': ['user.update_user'],
+        'DELETE': ['user.delete_user'],
+    }
 
     def get(self, request, pk):
-        user = User.get_by_id(pk)
+        if not request.user.is_superuser:
+            user = User.get_by_id(pk, organization=request.user.organization)
+        else:
+            user = User.get_by_id(pk)
         if not user:
             return self.error_response(
                 status_code=status.HTTP_404_NOT_FOUND,

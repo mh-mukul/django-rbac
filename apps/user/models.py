@@ -32,7 +32,7 @@ class CustomUserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     name = models.CharField(max_length=40)
-    mobile = models.CharField(max_length=11, unique=True)
+    mobile = models.CharField(max_length=20, unique=True)
     email = models.EmailField(blank=True, null=True)
     is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
@@ -61,12 +61,16 @@ class User(AbstractBaseUser, PermissionsMixin):
                 'permission__codename', flat=True))
         return set()
 
-
     def soft_delete(self):
         self.is_deleted = True
         self.is_active = False
         self.deleted_at = timezone.now()
         self.save()
+
+    def save(self, *args, **kwargs):
+        if self.is_deleted:
+            self.mobile = f"del_{self.id}_{self.mobile}"
+        super().save(*args, **kwargs)
 
     @classmethod
     def get_active(cls):
@@ -77,8 +81,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         return cls.objects.filter(is_deleted=False)
 
     @classmethod
-    def get_by_id(cls, pk):
+    def get_by_id(cls, pk, organization=None):
         try:
-            return cls.objects.get(id=pk, is_deleted=False)
+            if organization:
+                return cls.objects.get(pk=pk, is_deleted=False, organization=organization)
+            return cls.objects.get(pk=pk, is_deleted=False)
         except cls.DoesNotExist:
             return None
