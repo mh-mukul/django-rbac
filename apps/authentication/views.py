@@ -1,10 +1,12 @@
 import logging
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from apps.user.models import User
 from apps.core.helpers import ResponseHelper
@@ -13,64 +15,76 @@ from apps.authentication.serializers import LogoutSerializer
 logger = logging.getLogger('authentication')
 
 
-class UserLoginView(TokenObtainPairView, ResponseHelper):
-    def post(self, request, *args, **kwargs):
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
         try:
-            response = super().post(request, *args, **kwargs)
-
-            if not response.status_code == 200:
-                return self.error_response(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    message="Unable to verify credentials",
-                    errors={
-                        "detail": "No active account found with the given credentials"}
-                )
-            user_instance = User.objects.filter(
-                mobile=request.data.get('mobile'), is_active=True, is_deleted=False).first()
-            if not user_instance:
-                return self.error_response(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    message="Unable to verify credentials",
-                    errors={
-                        "detail": "No active account found with the given credentials"}
-                )
-            custom_response_data = {
-                "access_token": response.data.get("access"),
-                "refresh_token": response.data.get("refresh"),
-                "token_type": "bearer",
-                "user": {
-                    "id": user_instance.id,
-                    "name": user_instance.name,
-                    "email": user_instance.email,
-                    "mobile": user_instance.mobile,
-                    "is_password_reset_required": user_instance.is_password_reset_required,
-                    "is_superuser": user_instance.is_superuser,
-                    "is_staff": user_instance.is_staff,
-                    "organization": {
-                        "id": user_instance.organization.id,
-                        "name": user_instance.organization.name
-                    } if user_instance.organization else None,
-                    "role": {
-                        "id": user_instance.role.id,
-                        "name": user_instance.role.name
-                    } if user_instance.role else None,
-                    "permissions": list(user_instance.get_all_permissions())
-                },
-            }
-            return self.success_response(
-                status_code=status.HTTP_200_OK,
-                message="Successfully Logged In",
-                data=custom_response_data
+            return super().validate(attrs)
+        except Exception:
+            raise ValidationError(
+                {"detail": "No active account found with the given credentials"}
             )
 
-        except Exception as e:
-            logger.error("Error during user login", exc_info=True,
-                         extra={"mobile": request.data.get("mobile"), "error": str(e)})
+
+class UserLoginView(TokenObtainPairView, ResponseHelper):
+    serializer_class = CustomTokenObtainPairSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except ValidationError:
             return self.error_response(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                message="Something went wrong",
-                errors=[str(e)]
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                message="Unable to verify credentials",
+                errors=serializer.errors
             )
+
+        # At this point credentials are valid
+        tokens = serializer.validated_data
+        user_instance = User.objects.filter(
+            mobile=request.data.get('mobile'),
+            is_active=True,
+            is_deleted=False
+        ).first()
+
+        if not user_instance:
+            return self.error_response(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                message="Unable to verify credentials",
+                errors={
+                    "detail": "Invalid username or password"}
+            )
+
+        custom_response_data = {
+            "access_token": tokens.get("access"),
+            "refresh_token": tokens.get("refresh"),
+            "token_type": "bearer",
+            "user": {
+                "id": user_instance.id,
+                "name": user_instance.name,
+                "email": user_instance.email,
+                "mobile": user_instance.mobile,
+                "is_password_reset_required": user_instance.is_password_reset_required,
+                "is_superuser": user_instance.is_superuser,
+                "is_staff": user_instance.is_staff,
+                "organization": {
+                    "id": user_instance.organization.id,
+                    "name": user_instance.organization.name
+                } if user_instance.organization else None,
+                "role": {
+                    "id": user_instance.role.id,
+                    "name": user_instance.role.name
+                } if user_instance.role else None,
+                "permissions": list(user_instance.get_all_permissions())
+            },
+        }
+
+        return self.success_response(
+            status_code=status.HTTP_200_OK,
+            message="Successfully Logged In",
+            data=custom_response_data
+        )
 
 
 class UserLogoutView(APIView, ResponseHelper):

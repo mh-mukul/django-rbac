@@ -4,12 +4,19 @@ URL configuration for django-rbac project.
 The `urlpatterns` list routes URLs to views.
 """
 from django.contrib import admin
-from django.urls import path, include
 from django.conf import settings
+from django.http import JsonResponse
+from django.urls import path, include
+
+
+def healthcheck(request):
+    return JsonResponse({"status": "ok"})
+
 
 # Main URL patterns
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('health/', healthcheck),
     path('api/', include('apps.authentication.urls')),
     path('api/', include('apps.organization.urls')),
     path('api/', include('apps.user.urls')),

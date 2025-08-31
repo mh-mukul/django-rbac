@@ -1,13 +1,35 @@
 services:
   web:
-    build: .
-    volumes:
-      - .:/app
-      - static_volume:/app/staticfiles
-    ports:
-      - "8000:8000"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: drf-app:prod
+    restart: unless-stopped
     env_file:
       - .env
-
-volumes:
-  static_volume:
+    environment:
+      # Override Gunicorn defaults if desired
+      - GUNICORN_WORKERS=3
+      - GUNICORN_THREADS=2
+      - GUNICORN_TIMEOUT=60
+      - GUNICORN_BIND=0.0.0.0:8000
+      # App env (adapt for your settings)
+      - DJANGO_SETTINGS_MODULE=config.settings.prod
+      - DJANGO_ALLOWED_HOSTS=*
+      - DJANGO_DEBUG=False
+      # Optionally skip migrations/static on startup
+      - SKIP_MIGRATIONS=${SKIP_MIGRATIONS:-0}
+      - SKIP_COLLECTSTATIC=${SKIP_COLLECTSTATIC:-0}
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persist/static-share if you want host-mounted assets
+      - ./staticfiles:/app/staticfiles
+      - ./media:/app/media
+      - ./logs:/app/logs
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -fsS http://localhost:8000/health/ || exit 1" ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
