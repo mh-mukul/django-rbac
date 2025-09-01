@@ -8,29 +8,30 @@ log() { echo -e "${GREEN}[entrypoint]${NC} $*"; }
 warn() { echo -e "${YELLOW}[entrypoint]${NC} $*"; }
 err() { echo -e "${RED}[entrypoint]${NC} $*"; }
 
-# Default values
-: "${DJANGO_SETTINGS_MODULE:=config.settings}"
-: "${GUNICORN_BIND:=0.0.0.0:8000}"
-: "${GUNICORN_WORKERS:=3}"
-: "${GUNICORN_THREADS:=2}"
-: "${GUNICORN_TIMEOUT:=60}"
-
-# Optional: wait for a database if DATABASE_URL is set
+# Optional: wait for a database if DATABASE is set to postgres or mysql
 wait_for_db() {
-  if [ -n "${DATABASE_URL:-}" ]; then
-    warn "DATABASE_URL detected. Checking DB connectivity before starting..."
-    # Try a lightweight Django check to validate DB connection
-    ATTEMPTS=3
-    until python manage.py check --database default >/dev/null 2>&1; do
+  if [ "${DB_TYPE:-sqlite}" != "sqlite" ]; then
+    warn "Checking DB connectivity before starting..."
+    ATTEMPTS=10
+
+    case "${DJANGO_ENV:-prod}" in
+      dev) SETTINGS_MODULE="config.settings.dev" ;;
+      staging) SETTINGS_MODULE="config.settings.staging" ;;
+      prod|*) SETTINGS_MODULE="config.settings.prod" ;;
+    esac
+
+    until DJANGO_SETTINGS_MODULE=${SETTINGS_MODULE} \
+      python -c "import django; django.setup(); from django.db import connections; connections['default'].cursor()" >/dev/null 2>&1; do
       ATTEMPTS=$((ATTEMPTS-1)) || true
       if [ "$ATTEMPTS" -le 0 ]; then
         err "Database is not reachable. Exiting."; exit 1
       fi
-      warn "DB not ready, retrying in 3s... ($ATTEMPTS left)"; sleep 3
+      warn "DB not ready, retrying in 3s... ($ATTEMPTS left)"
+      sleep 3
     done
     log "Database reachable."
   else
-    warn "No DATABASE_URL provided; skipping DB wait."
+    log "DB_TYPE is sqlite, skipping DB connectivity check."
   fi
 }
 
@@ -53,18 +54,11 @@ run_migrations() {
 }
 
 start_gunicorn() {
-  log "Starting Gunicorn on ${GUNICORN_BIND} with ${GUNICORN_WORKERS} workers, ${GUNICORN_THREADS} threads..."
+  log "Starting Gunicorn..."
   exec gunicorn \
     --config gunicorn.conf.py \
-    --bind "${GUNICORN_BIND}" \
-    --workers "${GUNICORN_WORKERS}" \
-    --threads "${GUNICORN_THREADS}" \
-    --timeout "${GUNICORN_TIMEOUT}" \
     config.wsgi:application
 }
-
-# Health endpoint (simple)
-export HEALTHCHECK_PATH=${HEALTHCHECK_PATH:-/health/}
 
 # Run lifecycle
 wait_for_db
