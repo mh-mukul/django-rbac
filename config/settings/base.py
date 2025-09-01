@@ -17,8 +17,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
-    'DJANGO_SECRET_KEY', 'django-insecure-3%t0_rv-zb%+s_w5w+vmdv%j5^@hjbmvvdb9id(vzio_z=aqmm')
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-secret-key')
 
 
 INSTALLED_APPS = [
@@ -54,6 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'config.middleware.CustomExceptionMiddleware',  # Custom exception middleware
 ]
 
 ROOT_URLCONF = 'config.urls'
