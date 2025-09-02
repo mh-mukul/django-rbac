@@ -17,12 +17,21 @@ class UserSerializer(serializers.ModelSerializer):
     """
     role = RoleSerializer(read_only=True)
     organization = OrganizationSerializer(read_only=True)
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ['id', 'name', 'mobile', 'email', 'is_admin',
-                  'is_active', 'organization', 'role', 'last_login']
+                  'is_active', 'organization', 'role', 'last_login', 'image']
         read_only_fields = ['id', 'last_login']
+
+    def get_image(self, obj):
+        if obj.image and hasattr(obj.image, 'url'):
+            request = self.context.get('request')
+            if request is not None:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -37,7 +46,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['name', 'mobile', 'email', 'password', 'password_confirm',
-                  'is_admin', 'is_active', 'role']
+                  'is_admin', 'is_active', 'role', 'image']
 
     def validate(self, data):
         """
@@ -77,7 +86,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = User
-        fields = ['name', 'email', 'is_admin', 'is_active', 'role']
+        fields = ['name', 'email', 'is_admin', 'is_active', 'role', 'image']
 
     def validate(self, attrs):
         # Check if role belongs to the same organization as the user updating it

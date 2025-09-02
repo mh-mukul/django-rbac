@@ -43,6 +43,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         Organization, on_delete=models.SET_NULL, null=True, blank=True)
     role = models.ForeignKey(
         Role, on_delete=models.SET_NULL, null=True, blank=True)
+    image = models.ImageField(upload_to='user_images/', null=True, blank=True)
 
     USERNAME_FIELD = 'mobile'
     REQUIRED_FIELDS = []
