@@ -20,9 +20,6 @@ CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
 # SESSION_COOKIE_SECURE = True
 # CSRF_COOKIE_SECURE = True
 
-# Whitenoise configuration for serving static files
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
-
 # Email configuration (may use different service in staging)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.environ.get('EMAIL_HOST', '')

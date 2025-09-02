@@ -25,7 +25,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             )
 
 
-class UserLoginView(TokenObtainPairView, ResponseHelper):
+class LoginView(TokenObtainPairView, ResponseHelper):
     serializer_class = CustomTokenObtainPairSerializer
 
     def post(self, request, *args, **kwargs):
@@ -87,7 +87,7 @@ class UserLoginView(TokenObtainPairView, ResponseHelper):
         )
 
 
-class UserLogoutView(APIView, ResponseHelper):
+class LogoutView(APIView, ResponseHelper):
     permission_classes = (IsAuthenticated,)
     serializer_class = LogoutSerializer
 

@@ -89,19 +89,23 @@ django-rbac/
 │           ├── 0001_initial.py
 │           ├── 0002_alter_user_mobile.py
 │           └── __init__.py
-└── config/
-    ├── __init__.py
-    ├── asgi.py
-    ├── logger.py
-    ├── middleware.py
-    ├── urls.py
-    ├── wsgi.py
-    └── settings/
-        ├── __init__.py
-        ├── base.py
-        ├── dev.py
-        ├── prod.py
-        └── staging.py
+├── config/
+│   ├── __init__.py
+│   ├── asgi.py
+│   ├── logger.py
+│   ├── middleware.py
+│   ├── urls.py
+│   ├── wsgi.py
+│   └── settings/
+│       ├── __init__.py
+│       ├── base.py
+│       ├── dev.py
+│       ├── prod.py
+│       └── staging.py
+└── nginx/
+    ├── Dockerfile
+    └── default.conf
+
 ```
 
 ## Setup
@@ -168,6 +172,10 @@ docker-compose up -d --build
 
 API endpoints:
 
+- Authentication:
+  - `/api/v1/login/` - login
+  - `/api/v1/refresh/` - Refresh token
+  - `/api/v1/logout/` - logout
 - `/api/v1/organizations/` - Organization management
 - `/api/v1/users/` - User management
 - `/api/v1/modules/` - Module management

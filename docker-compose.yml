@@ -4,14 +4,14 @@ services:
       context: .
       dockerfile: Dockerfile
     image: drf-rbac-web:latest
-    container_name: drf-rbac-web
+    container_name: drf_rbac_web
     restart: unless-stopped
     env_file:
       - .env
-    ports:
-      - ${DOCKER_PORT:-8000}:8000
+    expose:
+      - "8000"
     volumes:
-      - ./staticfiles:/app/staticfiles
+      - static_data:/app/static
       - ./media:/app/media
       - ./logs:/app/logs
     healthcheck:
@@ -21,4 +21,27 @@ services:
       retries: 5
       start_period: 20s
     extra_hosts:
-      - "host.docker.internal:host-gateway"  # Enables access to local services
+      - "host.docker.internal:host-gateway"
+    networks:
+      - drf-rbac-network
+  nginx:
+    build: ./nginx
+    image: drf-rbac-nginx:latest
+    container_name: drf_rbac_nginx
+    ports:
+      - "${DOCKER_PORT:-8000}:80"
+    volumes:
+      - static_data:/static
+      - ./media:/media
+    depends_on:
+      - web
+    restart: unless-stopped
+    networks:
+      - drf-rbac-network
+  
+volumes:
+  static_data:
+
+networks:
+  drf-rbac-network:
+    external: true
