@@ -9,10 +9,14 @@ os.makedirs(LOG_DIR, exist_ok=True)  # Ensure logs directory exists
 
 class NoSensitiveDataFilter:
     def filter(self, record):
-        msg = record.getMessage().lower()
-        if "password" in msg or "secret" in msg or "token" in msg:
-            record.msg = "[SENSITIVE DATA REMOVED]"
-        return True
+        try:
+            msg = record.getMessage().lower()
+            if "password" in msg or "secret" in msg or "token" in msg:
+                record.msg = "[SENSITIVE DATA REMOVED]"
+                record.args = ()  # <<< clear args so no interpolation happens
+            return True
+        except Exception:
+            return True
 
 
 LOGGING = {

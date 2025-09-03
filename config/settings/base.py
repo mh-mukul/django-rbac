@@ -21,6 +21,8 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-secret-key')
 
 
 INSTALLED_APPS = [
+    "unfold",
+    "unfold.contrib.forms",
     # Django default apps
     'django.contrib.admin',
     'django.contrib.auth',

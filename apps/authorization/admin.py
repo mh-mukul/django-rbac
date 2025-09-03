@@ -1,16 +1,17 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 from .models import Module, Permission, Role, RolePermission
 
 
 @admin.register(Module)
-class ModuleAdmin(admin.ModelAdmin):
+class ModuleAdmin(ModelAdmin):
     list_display = ('id', 'name', 'is_active', 'is_deleted', 'created_at')
     search_fields = ('name',)
     ordering = ('-created_at',)
 
 
 @admin.register(Permission)
-class PermissionAdmin(admin.ModelAdmin):
+class PermissionAdmin(ModelAdmin):
     list_display = ('id', 'name', 'codename', 'module', 'is_active', 'is_deleted',
                     'created_at')
     search_fields = ('name', 'codename', 'module__name')
@@ -19,7 +20,7 @@ class PermissionAdmin(admin.ModelAdmin):
 
 
 @admin.register(Role)
-class RoleAdmin(admin.ModelAdmin):
+class RoleAdmin(ModelAdmin):
     list_display = ('id', 'name', 'organization',
                     'editable', 'is_active', 'is_deleted', 'created_at')
     search_fields = ('name', 'organization__name')
@@ -28,7 +29,7 @@ class RoleAdmin(admin.ModelAdmin):
 
 
 @admin.register(RolePermission)
-class RolePermissionAdmin(admin.ModelAdmin):
+class RolePermissionAdmin(ModelAdmin):
     list_display = ('id', 'role', 'permission', 'is_active', 'is_deleted',
                     'created_at')
     search_fields = ('role__name', 'permission__name', 'permission__codename')
