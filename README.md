@@ -10,6 +10,8 @@ A Django REST Framework project with Role-Based Access Control (RBAC).
 - Modular project structure
 - Environment-specific settings
 - Docker support
+- Proper logging and error handling
+- Django admin theme using django-unfold
 
 ## Project Structure
 
@@ -105,7 +107,6 @@ django-rbac/
 └── nginx/
     ├── Dockerfile
     └── default.conf
-
 ```
 
 ## Setup
@@ -181,7 +182,3 @@ API endpoints:
 - `/api/v1/modules/` - Module management
 - `/api/v1/permissions/` - Permission management
 - `/api/v1/roles/` - Role management
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.

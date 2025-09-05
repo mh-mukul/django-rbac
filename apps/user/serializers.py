@@ -46,7 +46,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['name', 'mobile', 'email', 'password', 'password_confirm',
-                  'is_admin', 'is_active', 'role', 'image']
+                  'is_admin', 'role', 'image']
 
     def validate(self, data):
         """

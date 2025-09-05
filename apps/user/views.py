@@ -24,7 +24,7 @@ class UserListCreateView(APIView, ResponseHelper):
         limit = request.GET.get('limit', 10)
         paginator = Paginator(users, limit)
         users = paginator.get_page(page)
-        serializer = UserSerializer(users, many=True)
+        serializer = UserSerializer(users, many=True, context={"request": request})
         return self.paginated_response(
             status_code=status.HTTP_200_OK,
             message="Success",
@@ -42,7 +42,7 @@ class UserListCreateView(APIView, ResponseHelper):
             return self.success_response(
                 status_code=status.HTTP_201_CREATED,
                 message="User created successfully",
-                data=UserSerializer(user).data
+                data=UserSerializer(user, context={"request": request}).data
             )
         return self.error_response(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -70,7 +70,7 @@ class UserDetailView(APIView, ResponseHelper):
                 message="User not found",
                 errors=[{"user_id": "Object with this ID does not exist."}]
             )
-        serializer = UserSerializer(user)
+        serializer = UserSerializer(user, context={"request": request})
         return self.success_response(
             status_code=status.HTTP_200_OK,
             message="Success",
@@ -95,7 +95,7 @@ class UserDetailView(APIView, ResponseHelper):
             return self.success_response(
                 status_code=status.HTTP_200_OK,
                 message="User updated successfully",
-                data=UserSerializer(user).data
+                data=UserSerializer(user, context={"request": request}).data
             )
         return self.error_response(
             status_code=status.HTTP_400_BAD_REQUEST,

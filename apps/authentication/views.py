@@ -88,7 +88,7 @@ class LoginView(TokenObtainPairView, ResponseHelper):
 
 
 class LogoutView(APIView, ResponseHelper):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = [IsAuthenticated,]
     serializer_class = LogoutSerializer
 
     def post(self, request, *args, **kwargs):
@@ -131,6 +131,9 @@ class LogoutView(APIView, ResponseHelper):
 
 
 class RefreshTokenView(APIView, ResponseHelper):
+    authentication_classes = []
+    permission_classes = []
+
     def post(self, request):
         refresh_token = request.data.get('refresh_token')
 
