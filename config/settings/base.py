@@ -7,6 +7,7 @@ from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
 from config.logger import LOGGING
+from config.unfold import UNFOLD_CONFIG
 
 load_dotenv()
 
@@ -21,8 +22,10 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-secret-key')
 
 
 INSTALLED_APPS = [
+    # Django unfold admin
     "unfold",
     "unfold.contrib.forms",
+
     # Django default apps
     'django.contrib.admin',
     'django.contrib.auth',
@@ -168,3 +171,6 @@ SIMPLE_JWT = {
 
 # Logging Configuration
 LOGGING = LOGGING
+
+
+UNFOLD = UNFOLD_CONFIG

@@ -22,7 +22,7 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
     ordering = ('-id',)
 
     fieldsets = (
-        (None, {'fields': ('mobile', 'password')}),   # keep `password` here
+        ('Account', {'fields': ('mobile', 'password')}),
         ('Personal info', {
          'fields': ('name', 'email', 'organization', 'image')}),
         ('Permissions', {'fields': ('role', 'is_active',
